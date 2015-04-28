@@ -1,24 +1,25 @@
 
 
 ##############################################################
+# Dynamics
+Target = 35               # random # between 0 and 2^Nbits-1
+Nbits = 6
+Niter = 5                 # number of iterations for freewheel updates
+Ncontract = 1             # number of iterations for contraction updates
+R = 3.7                   # R value for logistic update
+Crate = 0.2               # contraction rate
+Wbias = 4.0                 # bias toward fitness of nbr.
+
+##############################################################
 # Lattice
 Nside = 32                      # side of 2d lattice
 Nsites=Nside*Nside              # total lattice size
-Nvar = 12                       # number of internal dynamic variables
+Nvar = 3*Nbits                       # number of internal dynamic variables
 
-##############################################################
-# Dynamics
-Target = 10               # random # between 0 and 2^Nbits-1
-Nbits = 4
-Niter = 2                 # number of iterations for freewheel updates
-Ncontract = 1             # number of iterations for contraction updates
-R = 3.7                   # R value for logistic update
-Crate = 0.25               # contraction rate
-Wbias = 1.0                 # bias toward fitness of nbr.
 
 ##############################################################
 # Graphics
-Cellsize = 4
+Cellsize = 8
 Width = Cellsize*Nside
 Height = Cellsize*Nside
 latmn = 0                                 # lattice values latmin and less will be color 0

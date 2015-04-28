@@ -57,7 +57,7 @@ class Site:
         self.fix[1] = get1(self.bits)
         
     def Setw(self,targ):
-        assert targ<16                  #4 bits
+#        assert targ<16                  #4 bits
         targbits = [targ>>i & 1 for i in range(Nbits)]
         trybits = [self.bits[i] for i in bitsT]
         self.W = Wbias*sum([x==y for x,y in zip(targbits,trybits)]) /float(len(targbits)) # 1-Hamming dist
@@ -108,6 +108,11 @@ def mk2dnbrs():
     Nbrs[Nsites-1][1] = Nsites-Nside
     
 mk2dnbrs()    
+
+# For testing the 2d neighbors by taking a close look...
+# for i in range(len(Nbrs)):
+#     print i,i/Nside,i%Nside,Nbrs[i]
+
 
 class Lattice:
     sites = []
