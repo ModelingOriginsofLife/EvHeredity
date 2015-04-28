@@ -6,21 +6,27 @@ from graph import *
 
 execfile('globals.py')
 
+#np.random.seed(10)
+
 # bit locations for fixed pts and targets:
 bits0 = range(0,Nbits) # 4 bits for fix0
 bits1 = range(Nbits,2*Nbits) # 4 bits for fix1
 bitsT = range(2*Nbits,3*Nbits)
+rseq = [1*(i%3==0) for i in range(Nvar)]
+rseq[2] = 1
+rseq[7] = 1
+#print rseq
 
 def get0(bits):
     rtn=0
     for i in range(Nbits):
-        rtn = rtn<<1 | bits[bits0[i]]
+        rtn = rtn<<1 | (bits[bits0[i]]^rseq[bits0[i]]) # NG hack to mix things up a bit
     rtn = rtn / pow(2,Nbits)
     return rtn
 def get1(bits):
     rtn=0
     for i in range(Nbits):
-        rtn = rtn<<1 | (1-bits[bits1[i]])   # NG hack to mix things up a bit
+        rtn = rtn<<1 | (bits[bits1[i]]^rseq[bits1[i]])
     rtn = rtn / pow(2,Nbits)
     return rtn
 def getT(bits):
@@ -35,7 +41,8 @@ class Site:
     fix = []                           # 2 fixed pts
     W = 0.0                            # weight of my fixed pt to nbrs
     bits = [] # will be 0,1 according to whether state is nearest fix[0] or fix[1]
-
+    targ = []
+	
     def __init__(self):
         self.logis = np.random.rand(Nvar)
         self.fix = [0.25,0.75]
@@ -57,10 +64,11 @@ class Site:
         self.fix[1] = get1(self.bits)
         
     def Setw(self,targ):
-        assert targ<16                  #4 bits
+#        assert targ<16                  #4 bits
+		
         targbits = [targ>>i & 1 for i in range(Nbits)]
         trybits = [self.bits[i] for i in bitsT]
-        self.W = Wbias*sum([x==y for x,y in zip(targbits,trybits)]) /float(len(targbits)) # 1-Hamming dist
+        self.W = max(0,Wbias*(sum([x==y for x,y in zip(targbits,trybits)]) /float(len(targbits)) - 0.5))# 1-Hamming dist
 
     def Iterate(self):
         for i in range(Nvar):
@@ -70,7 +78,8 @@ class Site:
     def Contract(self):
         for i in range(Nvar):
             for _ in range(Ncontract):
-                self.logis[i] = self.logis[i] - Crate*(self.logis[i] - self.fix[self.bits[i]])
+                #self.logis[i] = self.logis[i] - Crate*(self.logis[i] - self.fix[self.bits[i]])
+                self.logis[i] = self.logis[i] - Crate*(self.logis[i] - self.targ[i])
             if self.logis[i] < 0:
                 self.logis[i] = 0.0001
             if self.logis[i] >1 :
@@ -82,14 +91,51 @@ class Site:
 # Nbrs[0][0] = Nsites-1                     # circular boundary...
 # Nbrs[Nsites-1][1] = 0
 
+# nearest nbr
+Nbrs =[[i-1,i+1] for i in range(Nsites)]
+Nbrs[0][0] = Nsites-1                     # circular boundary...
+Nbrs[Nsites-1][1] = 0
+
 # next to nearest nbr
-Nbrs =[[i-2,i-1,i+1,i+2] for i in range(Nsites)]
-Nbrs[0][0] = Nsites-2                     # circular boundary...
-Nbrs[0][1] = Nsites-1                     # circular boundary...
-Nbrs[1][0] = Nsites-1
-Nbrs[Nsites-2][3] = 0
-Nbrs[Nsites-1][2] = 0
-Nbrs[Nsites-1][3] = 1
+# Nbrs =[[i-2,i-1,i+1,i+2] for i in range(Nsites)]
+# Nbrs[0][0] = Nsites-2                     # circular boundary...
+# Nbrs[0][1] = Nsites-1                     # circular boundary...
+# Nbrs[1][0] = Nsites-1
+# Nbrs[Nsites-2][3] = 0
+# Nbrs[Nsites-1][2] = 0
+# Nbrs[Nsites-1][3] = 1
+
+###################
+# for 2d:
+# def mk2dnbrs():
+#     global Nbrs
+#     Nbrs =[[i-Nside,i+1,i+Nside,i-1] for i in range(Nsites)]
+#     # top row upper nbr:
+#     for i in range(Nside):
+#         Nbrs[i][0] = Nsites-Nside+i
+#     # bottom row lower nbr:
+#     for i in range(Nside):
+#         ii = Nsites-Nside+i
+#         Nbrs[ii][2] = i
+#     # L col
+#     for i in range(Nside):
+#         ii = Nside*i
+#         Nbrs[ii][3] = ii+Nside-1
+#     # R col
+#     for i in range(Nside):
+#         ii = (i+1)*Nside - 1
+#         Nbrs[ii][1] = ii-Nside+1    
+#     # upper L corner L nbr
+#     Nbrs[0][3] = Nside-1
+#     # lower R corner R nbr
+#     Nbrs[Nsites-1][1] = Nsites-Nside
+    
+# mk2dnbrs()    
+
+# # For testing the 2d neighbors by taking a close look...
+# #~ for i in range(len(Nbrs)):
+#      #~ print i,i/Nside,i%Nside,Nbrs[i]
+
 
 class Lattice:
     sites = []
@@ -104,22 +150,28 @@ class Lattice:
     # update fixed points of each site with weighted sum of nbr fixed pts
     def Fixw(self):
         # first compute into temporary storate
-        wtmp = [self.sites[i].fix for i in range(Nsites)]
+        ttemp = [ [0 for j in range(Nvar)] for i in range(Nsites)]
+        wtmp = [ [0,0] for i in range(Nsites)] # self.sites[i].fix
         for i in range(Nsites):
             for j in range(2):            # j over fix
                 Wnorm = 1                 # for current site
                 for nbr in Nbrs[i]:
                     Wnorm += self.sites[nbr].W
                 fixcur = self.sites[i].fix[j] / Wnorm
+                tcur = [self.sites[i].fix[k]/Wnorm for k in self.sites[i].bits]                
                 for nbr in Nbrs[i]:
                     fixcur += self.sites[nbr].W * self.sites[nbr].fix[j] / Wnorm
+                    for idx in range(len(tcur)):
+						tcur[idx] += self.sites[nbr].fix[ self.sites[nbr].bits[idx] ] * self.sites[nbr].W / Wnorm
                     assert fixcur>=0
                     assert fixcur<=1
-                    wtmp[i][j] = fixcur
+                wtmp[i][j] = fixcur
+                ttemp[i] = tcur
         # now copy into the real thing
         for i in range(Nsites):
-            for j in range(2):            # j over fix
-                self.sites[i].fix[j] = wtmp[i][j]
+			self.sites[i].targ = ttemp[i]			
+            #~ for j in range(2):            # j over fix
+                #~ self.sites[i].fix[j] = wtmp[i][j]
 
     def Update(self):
         for site in self.sites:           # freewheel
@@ -149,3 +201,4 @@ def main():
 
 if __name__=='__main__':
     main()
+        

@@ -33,7 +33,7 @@ def gr_init():
     global palette, cell, screen
     os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (20,300)
     init()                                    # pygame
-    display.set_caption("Activity")
+    display.set_caption("Heredity")
     screen = display.set_mode([Width, Height])
     draw.rect(screen, [10, 10, 10],(0, 0 , Width, Height + 1), 0)
     display.update()
