@@ -3,7 +3,7 @@
 #define NITER 6
 #define NCONTRACT 1
 #define LOGISTIC_R 3.7f
-#define CRATE 0.7f
+#define CRATE 0.86f
 #define WBIAS 1.0f
 
 #define NSITES 512

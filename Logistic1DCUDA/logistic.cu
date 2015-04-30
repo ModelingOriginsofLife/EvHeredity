@@ -71,9 +71,9 @@ __global__ void getFixed(Site *devGrid)
 		1,0,0,
 		1,1,0,
 		1,0,0,
-		1,0,0,
-		1,0,0,
-		1,0,0,
+		1,0,1,
+		1,0,1,
+		1,1,0,
 		1,0,0,
 		1,0,0,
 		1,0,0,
@@ -134,10 +134,6 @@ __global__ void Contract(Site *devGrid)
 
 		devGrid[site].targ[var] /= norm;
 
-		//~ if (devGrid[site].W > devGrid[(site+1)%NSITES].W)
-			//~ devGrid[site].targ[var] = devGrid[site].fixed[ devGrid[site].bits[var] ];
-		//~ else
-			//~ devGrid[site].targ[var] = devGrid[(site+1)%NSITES].fixed[ devGrid[(site+1)%NSITES].bits[var] ];
 		devGrid[site].logis[var] += CRATE*(devGrid[site].targ[var] - devGrid[site].logis[var]);
 	}
 }
