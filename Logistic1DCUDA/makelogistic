@@ -1,0 +1,10 @@
+rm *.o
+
+nvcc -c logistic.cu  -O6 -m64 -w -DLINUX -DSDL -maxrregcount 34 -arch sm_20 \
+--use_fast_math -ftz=true -prec-div=false -prec-sqrt=false
+
+g++ -c fblib.cpp  -DLINUX -DSDL -w -m64 -O6 -std=c++11
+g++ -c imgload.cpp -DLINUX -DSDL  -w -m64 -O6 -std=c++11
+g++ -c inputs.cpp -DLINUX -DSDL  -w -m64 -O6 -std=c++11
+
+g++ -o logistic fblib.o imgload.o inputs.o logistic.o -lm -lpng -O6 -m64 -lGL -lcudart -lcurand -lSDL -DSDL -DLINUX -std=c++11 
