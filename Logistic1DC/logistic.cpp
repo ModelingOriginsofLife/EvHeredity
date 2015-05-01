@@ -35,10 +35,8 @@ float logistic(float x)
 
 Site *Grid;
 
-void iterateLogistic(Site *Grid)
-{
-	long int idx = blockIdx.x*blockDim.x + threadIdx.x;
-   
+void iterateLogistic(Site *Grid, int idx)
+{   
 	if (idx<NSITES*NVAR)
 	{   
 		int site = idx/NVAR;
@@ -56,10 +54,8 @@ void iterateLogistic(Site *Grid)
 	}
 }
 
-void getFixed(Site *Grid)
+void getFixed(Site *Grid, int idx)
 {
-	long int idx = blockIdx.x*blockDim.x + threadIdx.x;
-	
 	int rseq[NVAR] =
 	{
 		1,0,1,
@@ -103,10 +99,8 @@ void getFixed(Site *Grid)
 	}
 }
 
-void Contract(Site *Grid)
+void Contract(Site *Grid, int idx)
 {
-	long int idx = blockIdx.x*blockDim.x + threadIdx.x;
-   
 	if (idx<NSITES*NVAR)
 	{   
 		int site = idx/NVAR;
@@ -135,20 +129,33 @@ void Contract(Site *Grid)
 
 void Iterate()
 {
-	int block_size = BSIZE;
+/*	int block_size = BSIZE;
 	int n_blocks1 = NSITES*NVAR/block_size + (NSITES*NVAR%block_size == 0 ? 0 : 1);  
 	int n_blocks2 = (NSITES*3)/block_size + ((NSITES*3)%block_size == 0 ? 0 : 1);  
 	
 	iterateLogistic <<< n_blocks1, block_size >>> (Grid);
 	getFixed <<< n_blocks2, block_size >>> (Grid);
-	Contract <<< n_blocks1, block_size >>> (Grid);
+	Contract <<< n_blocks1, block_size >>> (Grid);*/
 	
+	for (int i=0;i<NSITES*NVAR;i++)
+	{
+		iterateLogistic(Grid,i);
+	}
+	
+	for (int i=0;i<NSITES*3;i++)
+	{
+		getFixed(Grid,i);
+	}
+
+	for (int i=0;i<NSITES*NVAR;i++)
+	{
+		Contract(Grid,i);
+	}
 }
 
 void Init()
 {
 	Grid=(Site*)malloc(sizeof(Site)*NSITES);
-	malloc((void**)&Grid, NSITES*sizeof(Site));
 	
 	for (int i=0;i<NSITES;i++)
 	{
