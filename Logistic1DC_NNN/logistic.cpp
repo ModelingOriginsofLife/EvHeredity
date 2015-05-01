@@ -165,7 +165,7 @@ int iter = 0;
 
 void Render()
 {
-	int y = iter%HEIGHT;
+	int y = iter%(HEIGHT/CELLSIZE);
 	
 	for (int x=0;x<NSITES;x++)
 	{
@@ -182,6 +182,7 @@ void Render()
 		if (r<0) r=0; if (r>255) r=255;
 		if (g<0) g=0; if (g>255) g=255;
 		if (b<0) b=0; if (b>255) b=255;
+
 		
 		for (int y2=0;y2<CELLSIZE;y2++)
 		{
