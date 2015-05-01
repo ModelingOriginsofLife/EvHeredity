@@ -30,7 +30,7 @@ class Site
 
 float logistic(float x)
 {
-	return fmaxf(0.0001f,fminf(0.9999f,LOGISTIC_R * x * (1.0f - x)));
+	return LOGISTIC_R * x * (1.0f - x);
 }
 
 Site *Grid;
@@ -56,22 +56,6 @@ void iterateLogistic(Site *Grid, int idx)
 
 void getFixed(Site *Grid, int idx)
 {
-	int rseq[NVAR] =
-	{
-		1,0,1,
-		1,0,0,
-		1,1,0,
-		1,0,0,
-		1,0,1,
-		1,0,1,
-		1,1,0,
-		1,0,0,
-		1,0,0,
-		1,0,0,
-		1,0,0,
-		1,0,0
-	};
-	
 	if (idx<NSITES*3)
 	{   
 		int fid = idx/NSITES;
@@ -83,7 +67,7 @@ void getFixed(Site *Grid, int idx)
 				
 		for (int i=0;i<NBITS;i++)
 		{
-			result += (1<<i)*(Grid[sid].bits[bidx] ^ rseq[bidx]);
+			result += (1<<(NBITS-i-1))*(Grid[sid].bits[bidx] ^ rseq[bidx]);
 			dist += (Grid[sid].bits[bidx] != (TARGET>>i)%2);
 			bidx++;
 		}
@@ -94,7 +78,7 @@ void getFixed(Site *Grid, int idx)
 		}
 		else
 		{
-			Grid[sid].W = WBIAS * fmaxf(0.0f,((1.0f-dist/(float)NBITS) - 0.5f));//WBIAS * ( (1.0-dist/(float)NBITS) - 0.5 );
+			Grid[sid].W = WBIAS * fmaxf(0.0f,((1.0f-dist/(float)NBITS) - FITNESS_THRESHOLD));//WBIAS * ( (1.0-dist/(float)NBITS) - 0.5 );
 		}
 	}
 }
@@ -123,7 +107,9 @@ void Contract(Site *Grid, int idx)
 
 		Grid[site].targ[var] /= norm;
 
-		Grid[site].logis[var] += CRATE*(Grid[site].targ[var] - Grid[site].logis[var]);
+		Grid[site].logis[var] += CRATE*(Grid[site].targ[var] - Grid[site].logis[var]); 
+		if (Grid[site].logis[var]<0.0001) Grid[site].logis[var] = 0.0001;
+		if (Grid[site].logis[var]>0.9999) Grid[site].logis[var] = 0.9999;
 	}
 }
 
@@ -176,14 +162,14 @@ int iter = 0;
 
 void Render()
 {
-	int y = iter%NSITES;
+	int y = iter%HEIGHT;
 	
 	for (int x=0;x<NSITES;x++)
 	{
 		int r,g,b;
-		float w = (Grid[x].W/WBIAS+0.5);
-		
-		g=192-92*w;
+		float w = (1.0/(1.0-FITNESS_THRESHOLD))*(Grid[x].W/WBIAS);
+				
+		g=192-92*(w-0.5)*(w-0.5)*4;
 		r=255*(1.0-w);
 		b=255*w;
 		
@@ -210,6 +196,7 @@ void Render()
 
 int main(int argc, char **argv)
 {
+	srand(time(NULL));
 	Init();
 	
 	while (1)
