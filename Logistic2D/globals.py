@@ -12,7 +12,7 @@ Wbias = 1.0                 # bias toward fitness of nbr.
 
 ##############################################################
 # Lattice
-Nside = 32                     # side of 2d lattice
+Nside = 64                     # side of 2d lattice
 Nsites=Nside*Nside              # total lattice size
 Nvar = 3*Nbits                       # number of internal dynamic variables
 
@@ -24,5 +24,5 @@ Width = Cellsize*Nside
 Height = Cellsize*Nside
 latmn = 0                                 # lattice values latmin and less will be color 0
 latmx = 1.0                               # lattice values latmax and more will be color 255
-Coltype = 0                               # 1 => mean of fixed pts, 0 => fitness
+Coltype = 1                               # 1 => mean of fixed pts, 0 => fitness
 

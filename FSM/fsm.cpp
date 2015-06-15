@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
+#include <vector>
 
 using namespace std;
 
@@ -37,7 +38,7 @@ class FSM
 		int links[CYCLEN*SDEPTH*2];
 		
 		void fromBitstring(char *bstr);
-		void runOnBitstring(char *bstr);
+		void runOnBitstring(char *bstr, char *n1, char *n2);
 };
 
 void FSM::fromBitstring(char *bstr)
@@ -60,21 +61,34 @@ void FSM::fromBitstring(char *bstr)
 				}
 				
 				links[iftype + 2*depth + 2*SDEPTH*cyc] = val;
+				
+				if (iftype==1)
+				{
+					if (links[1 + 2*depth + 2*SDEPTH*cyc] ==
+						links[0 + 2*depth + 2*SDEPTH*cyc])
+						links[1 + 2*depth + 2*SDEPTH*cyc] = (val+1)%SDEPTH;
+				}
 			}
 		}
-	}
+	}	
 }
 
-void FSM::runOnBitstring(char *bstr)
+void FSM::runOnBitstring(char *bstr, char *n1, char *n2)
 {
 	int x,y;
 	int bitidx = 0;
+	int nidx = 0;
 	
 	x = 0; y = 0;
 	
 	while (bitidx < SLEN)
 	{
-		int nexty = links[bstr[bitidx] + 2*y + 2*SDEPTH*x];
+		int bitval = 0;
+		int sum = bstr[bitidx];
+		
+		if (sum>1) bitval=1; else bitval = 0;
+		
+		int nexty = links[bitval + 2*y + 2*SDEPTH*x];
 		
 		if (x>=CYCLEN/2)
 		{
@@ -89,62 +103,110 @@ void FSM::runOnBitstring(char *bstr)
 		if (x==CYCLEN/2)
 		{
 			bitidx -= CYCLEN/2;
+			nidx++;
 		}
-		
+/*		else if (x==2*CYCLEN/3)
+		{
+			bitidx -= CYCLEN/3;
+			nidx++;
+		}		*/
 		if (x>=CYCLEN)
 		{
 			x = 0;
+			nidx = 0;
 		}
 	}	
 }
 
+vector<char*> Pop;
+vector<char*> Proxy;
+
 int main(int argc, char **argv)
 {
-	char bstr[SLEN];
-	
-	for (int i=0;i<SLEN;i++)
-		bstr[i] = rand()%2;
+	for (int j=0;j<1000;j++)
+	{
+		char *bstr = (char*)malloc(SLEN);
+		for (int i=0;i<SLEN;i++)
+			bstr[i] = rand()%2;
+		Pop.push_back(bstr);
+
+		bstr = (char*)malloc(SLEN);
+		for (int i=0;i<SLEN;i++)
+			bstr[i] = rand()%2;
 		
+		Proxy.push_back(bstr);
+	}
+			
 	int iter=0;
 	double error = 0;
 	while (iter<50000000)
 	{
-		FSM F;
 		char etest[EXCESS/REDUNDANCY];
-		
 		for (int i=0;i<EXCESS/REDUNDANCY;i++)
 		{
 			etest[i] = rand()%2;
-			for (int j=0;j<REDUNDANCY;j++)
+		}
+		
+		for (int p=0;p<Pop.size();p++)
+		{		
+			for (int i=0;i<EXCESS/REDUNDANCY;i++)
 			{
-				bstr[CYCLEN*SDEPTH*2*SBITS*REDUNDANCY + i*REDUNDANCY + j] = etest[i];
+				for (int j=0;j<REDUNDANCY;j++)
+				{
+					Pop[p][CYCLEN*SDEPTH*2*SBITS*REDUNDANCY + i*REDUNDANCY + j] = etest[i];
+				}
+			}					
+			for (int bitidx=0;bitidx<SLEN;bitidx++)
+			{
+				if (rand()%10000000<10000000*HIGH_ERROR_RATE)
+					Pop[p][bitidx] = rand()%2;
 			}
 		}
 		
-		F.fromBitstring(bstr);
-		
-		for (int bitidx=0;bitidx<SLEN;bitidx++)
+		for (int p=0;p<Pop.size();p++)
 		{
-			if (rand()%10000000<10000000*HIGH_ERROR_RATE)
-				bstr[bitidx] = rand()%2;
-		}
-		
-		F.runOnBitstring(bstr);		
-		
-		for (int i=0;i<EXCESS/REDUNDANCY;i++)
-		{
-			for (int j=0;j<REDUNDANCY;j++)
+			int j,k;
+			FSM F;
+			char mStr[SLEN];
+			
+			j = p-1; if (j<0) j+=Pop.size();
+			k = p+1; if (k>=Pop.size()) k-=Pop.size();
+			
+			for (int i=0;i<SLEN;i++)
 			{
-				error += fabs(bstr[CYCLEN*SDEPTH*2*SBITS*REDUNDANCY + i*REDUNDANCY + j] - etest[i]);
+				mStr[i] = (Pop[j][i] + Pop[p][i] + Pop[k][i] > 1);
+			}
+			F.fromBitstring(mStr);
+			memcpy(Proxy[p],Pop[p],SLEN);
+			F.runOnBitstring(Proxy[p],Pop[j],Pop[k]);
+		}
+			
+		for (int p=0;p<Pop.size();p++)
+		{
+			memcpy(Pop[p],Proxy[p],SLEN);
+			for (int i=0;i<EXCESS/REDUNDANCY;i++)
+			{
+				for (int j=0;j<REDUNDANCY;j++)
+				{
+					error += fabs(Pop[p][CYCLEN*SDEPTH*2*SBITS*REDUNDANCY + i*REDUNDANCY + j] - etest[i]);
+				}
 			}
 		}
 		
+/*		for (int i=0;i<Pop.size()/4;i++)
+		{
+			int p1=rand()%Pop.size();
+			int p2=rand()%Pop.size();
+			
+			if (p2 != p1)
+				memcpy(Pop[p2], Pop[p1], SLEN);			
+		}*/
 		iter++;
 		
-		if (iter%100==0)
+		//if (iter%100==0)
 		{
 			FILE *f = fopen("error.txt","a");
-			fprintf(f,"%d %.9g\n",iter,error/(double)(100.0*EXCESS));
+			fprintf(f,"%d %.9g\n",iter,error/(double)(Pop.size()*EXCESS));
 			fclose(f);
 			error = 0;
 			/*FILE *f = fopen("log.txt","a");
