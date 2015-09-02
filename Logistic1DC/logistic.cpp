@@ -196,8 +196,12 @@ void Render()
 
 int main(int argc, char **argv)
 {
+	Img I;
+	
 	srand(time(NULL));
 	Init();
+	
+	I.Width = WIDTH; I.Height = HEIGHT; I.Image=ScreenBuf;
 	
 	while (1)
 	{
@@ -220,5 +224,11 @@ int main(int argc, char **argv)
 		
 		if (iter%100==0)
 			printf("%.6g\n",fbar);
+			
+		//~ if (iter == HEIGHT)
+		//~ {
+			//~ PNMSave("tmp.pnm",I);
+			//~ return 0;
+		//~ }
 	}
 }
