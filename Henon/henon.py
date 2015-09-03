@@ -3,7 +3,6 @@
 import numpy as np
 import sys
 from graph import *
-from numba import jit
 
 execfile('globals.py')
 
@@ -20,7 +19,6 @@ rseq[2] = 1
 rseq[7] = 1
 #print rseq
 
-@jit
 def getbits(bits,rng):
     rtn=0
     for i in rng:
@@ -29,7 +27,6 @@ def getbits(bits,rng):
     rtn = 2*((rtn / pow(2,Nbits)) - 0.5)
     return rtn
 
-@jit
 def getT(bits):
     rtn=0
     for i in bitsT:
@@ -167,6 +164,7 @@ class Lattice:
         # for x coord of both fixed pts:
         # first compute into temporary storage
         ttemp = [ [0 for j in range(Nvar)] for i in range(Nsites)]
+        Wnew = [0 for _ in range(Nsites)]
         wtmp = [ [0,0] for i in range(Nsites)] # self.sites[i].fix
         for i in range(Nsites):
             for j in range(2):            # j over fix
@@ -190,8 +188,10 @@ class Lattice:
         # for y coord of both fixed pts:
         # first compute into temporary storage
         ttemp = [ [0 for j in range(Nvar)] for i in range(Nsites)]
+        Wnew = [0 for _ in range(Nsites)]
         wtmp = [ [0,0] for i in range(Nsites)] # self.sites[i].fix
         for i in range(Nsites):
+            Wnew[i] = 0                   # keep track of new W this round (should be same as last round...)
             for j in range(2):            # j over fix
                 Wnorm = 1                 # for current site
                 for nbr in Nbrs[i]:
@@ -204,11 +204,13 @@ class Lattice:
 						tcur[idx] += self.sites[nbr].fix[ self.sites[nbr].bits[idx] ][1] * self.sites[nbr].W / Wnorm
                     assert fixcur>=-1.5
                     assert fixcur<=1.5
+                Wnew[i] = Wnorm
                 wtmp[i][j] = fixcur
                 ttemp[i] = tcur
         # now copy into the real thing
         for i in range(Nsites):
 			self.sites[i].targy = ttemp[i]			
+			self.sites[i].W = Wnew[i]             # replace W's this round
 
     def Update(self):
         for site in self.sites:           # freewheel
