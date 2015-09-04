@@ -95,7 +95,7 @@ void getFixed(Site *Grid, int idx)
 		if (fid==4)
 		{
 			Grid[sid].persist = fmaxf(0.0f,((1.0f-dist/(float)NBITS)));
-			Grid[sid].W =  WBIAS * (0.54 - FITNESS_THRESHOLD);//WBIAS * ( (1.0-dist/(float)NBITS) - 0.5 ); 
+			Grid[sid].W =  WBIAS * (NEIGHBOR_W - FITNESS_THRESHOLD);//WBIAS * ( (1.0-dist/(float)NBITS) - 0.5 ); 
 		}
 		else
 		{			

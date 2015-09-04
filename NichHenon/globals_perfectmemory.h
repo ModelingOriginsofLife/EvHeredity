@@ -7,6 +7,7 @@
 #define LOGISTIC_R 3.7f
 double CRATE = 0.75f;
 #define WBIAS 2.5f
+#define NEIGHBOR_W 0.54
 
 #define ALPHA 1.4
 #define BETA 0.3
