@@ -1,13 +1,13 @@
 // Evolving population
 
-#define TARGET (1+2+4)
-#define NBITS 6
-#define NITER 5
+#define TARGET (1+2+4+8+16+32)*(1+2)
+#define NBITS 24
+#define NITER 6
 #define NCONTRACT 1
 #define LOGISTIC_R 3.7f
-double CRATE = 0.9f;
+double CRATE = 0.975f;
 #define WBIAS 2.5f
-#define NEIGHBOR_W 0.6
+#define NEIGHBOR_W 0.68
 #define ALPHA 1.4
 #define BETA 0.3
 
