@@ -59,8 +59,8 @@ void iterateLogistic(Site *Grid, int idx)
 				ny = (rand()%2000001-1000000.0)/1000000.0;
 			}
 			
-			Grid[site].logis[var].x = nx;
-			Grid[site].logis[var].y = ny;
+			Grid[site].logis[var].x = nx;//0.2*(rand()%200001-100000.0)/100000.0;
+			Grid[site].logis[var].y = ny;//0.2*(rand()%200001-100000.0)/100000.0;
 		}
 		
 		float d1 = pow(Grid[site].logis[var].x - Grid[site].fixed[0],2) + pow(Grid[site].logis[var].y - Grid[site].fixed[1],2);
@@ -83,9 +83,9 @@ void getFixed(Site *Grid, int idx)
 				
 		for (int i=0;i<NBITS;i++)
 		{
-			result += (1<<(NBITS-i-1))*(Grid[sid].bits[bidx] ^ (i%3 == 0));
+			result += (1<<(NBITS-i-1))*(Grid[sid].bits[bidx] ^ ((i+fid)%7 == 0));
 			dist += (Grid[sid].bits[bidx] != (TARGET>>i)%2);
-			if (fid==5)
+			if (fid==4)
 			{
 				Grid[sid].bits[bidx] = (TARGET>>i)%2;
 			}
@@ -99,7 +99,7 @@ void getFixed(Site *Grid, int idx)
 		}
 		else
 		{			
-			Grid[sid].fixed[fid] = 1*( ((float)result)/(float)(1<<NBITS) - 0.5);
+			Grid[sid].fixed[fid] = 2.0*( ((float)result)/(float)(1<<NBITS) - 0.5);
 		}
 	}
 }
@@ -202,7 +202,7 @@ int iter = 0;
 
 void Render()
 {
-	int y = iter%HEIGHT;
+	int y = iter%(HEIGHT/CELLSIZE);
 	
 	for (int x=0;x<NSITES;x++)
 	{
@@ -254,7 +254,7 @@ int main(int argc, char **argv)
 		//CRATE = 0.25*(-cos(2*M_PI*t/1000.0)+1);
 		//~ CRATE += 1e-3;
 		//~ if (CRATE > 1.0) CRATE = 1.0;
-		printf("%.6g %.6g\n",Grid[0].logis[0].x,Grid[0].logis[0].y);
+		printf("%.6g %.6g %.6g %.6g: %d %d %d %d\n",Grid[0].fixed[0], Grid[0].fixed[1],Grid[0].fixed[2], Grid[0].fixed[3], Grid[0].bits[0],Grid[0].bits[1],Grid[0].bits[2],Grid[0].bits[3]);
 		if (Ch=='q') return 0;
 
 		Iterate();
