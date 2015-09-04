@@ -3,10 +3,12 @@ rm *.o
 
 #nvcc -c logistic.cu  -O6 -m64 -w -DLINUX -DSDL -maxrregcount 34 -arch sm_20 \
 #--use_fast_math -ftz=true -prec-div=false -prec-sqrt=false
+CFLAGS="-I/opt/local/include/SDL -D_GNU_SOURCE=1 -D_THREAD_SAFE  -DLINUX -DSDL -w -m64 -O6 -std=gnu++11"
+LFLAGS="-lm -O6 -m64 -DLINUX -std=c++11 -L/opt/local/lib -lSDLmain -Wl,-framework,AppKit -lSDL -Wl,-framework,Cocoa"
 
-g++-4.9 -c logistic.cpp  -DLINUX -DSDL -w -m64 -O6 -std=c++11
-g++-4.9 -c fblib.cpp  -DLINUX -DSDL -w -m64 -O6 -std=c++11
-g++-4.9 -c imgload.cpp -DLINUX -DSDL  -w -m64 -O6 -std=c++11
-g++-4.9 -c inputs.cpp -DLINUX -DSDL  -w -m64 -O6 -std=c++11
+g++-mp-4.9 -c logistic.cpp  $CFLAGS
+g++-mp-4.9 -c fblib.cpp   $CFLAGS
+g++-mp-4.9 -c imgload.cpp  $CFLAGS
+g++-mp-4.9 -c inputs.cpp  $CFLAGS
 
-g++-4.9 -o logistic fblib.o imgload.o inputs.o logistic.o -lm -lpng -O6 -m64 -lGL -lSDL -DSDL -DLINUX -std=c++11 
+g++-mp-4.9 -o logistic fblib.o imgload.o inputs.o logistic.o $LFLAGS
