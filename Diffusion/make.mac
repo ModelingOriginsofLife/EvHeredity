@@ -1,0 +1,14 @@
+
+rm *.o
+
+#nvcc -c logistic.cu  -O6 -m64 -w -DLINUX -DSDL -maxrregcount 34 -arch sm_20 \
+#--use_fast_math -ftz=true -prec-div=false -prec-sqrt=false
+CFLAGS="-I/opt/local/include/SDL -D_GNU_SOURCE=1 -D_THREAD_SAFE  -DLINUX -DSDL -w -m64 -O6 -std=gnu++11"
+LFLAGS="-lm -O6 -m64 -DLINUX -std=c++11 -L/opt/local/lib -lSDLmain -Wl,-framework,AppKit -lSDL -Wl,-framework,Cocoa"
+
+g++ -c main.cpp  $CFLAGS
+g++ -c fblib.cpp   $CFLAGS
+g++ -c imgload.cpp  $CFLAGS
+g++ -c inputs.cpp  $CFLAGS
+
+g++ -o heredity fblib.o imgload.o inputs.o main.o $LFLAGS

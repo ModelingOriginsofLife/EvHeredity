@@ -1,0 +1,7 @@
+
+NP Sept 6 2015:
+- started with NichHenon directory
+- anonomized variables to get away from logistic / henon naming
+- only real difference is substitution of random walk for Henon map.
+- step size hard-coded to be 0.1  vary extent of walk with NITER
+
